@@ -1,0 +1,268 @@
+//
+//  Dependencies.swift
+//  Open Space Game
+//
+//  Created by Marvin Günther on 23.02.23.
+//
+
+import SpriteKit
+
+/*
+ PHYSICS
+ */
+
+struct PhysicsCategories {
+    static let None : UInt32 = 0
+    static let Player : UInt32 = 0b1
+    static let Bullet : UInt32 = 0b10
+    static let SmallAsteroid : UInt32 = 0b100
+    static let MediumAsteroid : UInt32 = 0b1000
+    static let BigAsteroid : UInt32 = 0b10000
+}
+
+
+/*
+ VARIOUS GLOBALS
+ */
+
+var scoreLabel: SKLabelNode!
+
+var score = 0 {
+    didSet {
+        scoreLabel.text = "\(score)"
+    }
+}
+
+var shieldLevel = 0
+
+let worldOffsetX = 3000.0
+let worldOffsetY = 2000.0
+
+var rotateLeft = false
+var rotateRight = false
+var rotateDown = false
+
+var isTouched = false
+var touchPosX: CGFloat = 0.0
+var touchPosY: CGFloat = 0.0
+
+// spaceship delta v
+var dtX = 0.0
+var dtY = 0.0
+let maxDT = 7.0
+
+// black background color
+let backgroundColorCustom = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+
+var supportsHaptics: Bool = false
+
+var gamePaused = false
+
+var smallAsteroidHit = false
+var mediumAsteroidHit = false
+var bigAsteroidHit = false
+var shieldHit = false
+
+var hapticWarningShot = false
+
+var smallAstClose = false
+var mediumAstClose = false
+var bigAstClose = false
+
+// keeping asteroids from spawning outside world
+var xMin = -3000
+var xMax = 3000
+var yMin = -2000
+var yMax = 2000
+
+var asteroidHoming = false
+
+var homingSpeedSmall = 1.0
+var homingSpeedMedium = 1.0
+var homingSpeedBig = 1.0
+
+var smallScore = 1500
+var mediumScore = 1000
+var bigScore = 500
+
+
+/*
+ LOADING VARIOUS ASSETS
+ */
+
+// SFX
+let shotSFX = SKAction.playSoundFileNamed("shotSFX", waitForCompletion: false)
+let shieldUpSFX = SKAction.playSoundFileNamed("shieldUpSFX", waitForCompletion: false)
+let shieldDownSFX = SKAction.playSoundFileNamed("shieldDownSFX", waitForCompletion: false)
+let smallAstSFX = SKAction.playSoundFileNamed("smallAstSFX", waitForCompletion: false)
+let mediumAstSFX = SKAction.playSoundFileNamed("mediumAstSFX", waitForCompletion: false)
+let bigAstSFX = SKAction.playSoundFileNamed("bigAstSFX", waitForCompletion: false)
+
+let player = SKSpriteNode(imageNamed: "retroSpaceship")
+let rocketFlame = SKSpriteNode(imageNamed: "rocketTailAlt")
+let introShip = SKSpriteNode(imageNamed: "retroSpaceship")
+let introRocketFlame = SKSpriteNode(imageNamed: "rocketTailAlt")
+let introShip2 = SKSpriteNode(imageNamed: "retroSpaceship")
+let introRocketFlame2 = SKSpriteNode(imageNamed: "rocketTailAlt")
+let enemyAsteroidSmall = SKSpriteNode(imageNamed: "enemyAsteroidSmall")
+let enemyAsteroidMedium = SKSpriteNode(imageNamed: "enemyAsteroidMedium")
+let enemyAsteroidBig = SKSpriteNode(imageNamed: "enemyAsteroidBig")
+let mage = SKSpriteNode(imageNamed: "mageINIT")
+let worldEdge = SKSpriteNode(imageNamed: "worldEdge")
+let tapButton = SKSpriteNode(imageNamed: "emptyTap")
+let fireButton = SKSpriteNode(imageNamed: "fireButton")
+let pauseButton = SKSpriteNode(imageNamed: "pauseButton")
+let playButton = SKSpriteNode(imageNamed: "playButton")
+
+// PLATFORMS
+let platform1 = SKSpriteNode(imageNamed: "Platform1")
+let platform2 = SKSpriteNode(imageNamed: "Platform2")
+let platform3 = SKSpriteNode(imageNamed: "Platform3")
+let platform4 = SKSpriteNode(imageNamed: "Platform4")
+let platform5 = SKSpriteNode(imageNamed: "Platform5")
+let platform6 = SKSpriteNode(imageNamed: "Platform6")
+let platform7 = SKSpriteNode(imageNamed: "Platform7")
+let platform8 = SKSpriteNode(imageNamed: "Platform8")
+let platform9 = SKSpriteNode(imageNamed: "Platform9")
+let platform10 = SKSpriteNode(imageNamed: "Platform10")
+let platform11 = SKSpriteNode(imageNamed: "Platform11")
+let platform12 = SKSpriteNode(imageNamed: "Platform12")
+let platform13 = SKSpriteNode(imageNamed: "Platform13")
+
+// SHROOMS
+let shroom1 = SKSpriteNode(imageNamed: "shroom1")
+let shroom2 = SKSpriteNode(imageNamed: "shroom2")
+let shroom3 = SKSpriteNode(imageNamed: "shroom3")
+let shroom4 = SKSpriteNode(imageNamed: "shroom4")
+let shroom5 = SKSpriteNode(imageNamed: "shroom5")
+
+// FOG
+let fog1 = SKSpriteNode(imageNamed: "Fog1")
+let fog1small = SKSpriteNode(imageNamed: "Fog1Small")
+let fog2 = SKSpriteNode(imageNamed: "Fog2")
+
+// PROXIMITY BAR
+let PBWhite = SKSpriteNode(imageNamed: "PBEmpty")
+let PBYellow = SKSpriteNode(imageNamed: "PBEmpty")
+let PBRed = SKSpriteNode(imageNamed: "PBEmpty")
+
+// SHIELD BAR
+let shieldBar0 = SKSpriteNode(imageNamed: "shieldBar0")
+let shieldBar1 = SKSpriteNode(imageNamed: "shieldBar1")
+let shieldBar2 = SKSpriteNode(imageNamed: "shieldBar2")
+let shieldBar3 = SKSpriteNode(imageNamed: "shieldBar3")
+let shieldBar4 = SKSpriteNode(imageNamed: "shieldBar4")
+let shieldBar5 = SKSpriteNode(imageNamed: "shieldBar5")
+
+// TAP ANIMATION
+var tapAnimationAtlas: SKTextureAtlas {
+    return SKTextureAtlas(named: "tapAnimation")
+}
+
+var tapAnimationTextures: [SKTexture] {
+    return [
+        tapAnimationAtlas.textureNamed("tap1"),
+        tapAnimationAtlas.textureNamed("tap2"),
+        tapAnimationAtlas.textureNamed("tap3"),
+        tapAnimationAtlas.textureNamed("tap4"),
+        tapAnimationAtlas.textureNamed("tap5"),
+        tapAnimationAtlas.textureNamed("tapFinal"),
+        tapAnimationAtlas.textureNamed("tap5"),
+        tapAnimationAtlas.textureNamed("tap4"),
+        tapAnimationAtlas.textureNamed("tap3"),
+        tapAnimationAtlas.textureNamed("tap2"),
+        tapAnimationAtlas.textureNamed("tap1"),
+        tapAnimationAtlas.textureNamed("emptyTapAnim")
+    ]
+}
+
+// MAGE ANIMATION
+var mageAnimationAtlas: SKTextureAtlas {
+    return SKTextureAtlas(named: "mageAnimation")
+}
+
+var mageAnimationTextures: [SKTexture] {
+    return [
+        mageAnimationAtlas.textureNamed("mage1"),
+        mageAnimationAtlas.textureNamed("mage2"),
+        mageAnimationAtlas.textureNamed("mage3"),
+        mageAnimationAtlas.textureNamed("mage4"),
+        mageAnimationAtlas.textureNamed("mage5"),
+        mageAnimationAtlas.textureNamed("mage6"),
+        mageAnimationAtlas.textureNamed("mage7"),
+        mageAnimationAtlas.textureNamed("mage8"),
+        mageAnimationAtlas.textureNamed("mage9"),
+        mageAnimationAtlas.textureNamed("mage10"),
+        mageAnimationAtlas.textureNamed("mage11"),
+        mageAnimationAtlas.textureNamed("mage12"),
+        mageAnimationAtlas.textureNamed("mage13"),
+        mageAnimationAtlas.textureNamed("mage14"),
+        mageAnimationAtlas.textureNamed("mage15"),
+        mageAnimationAtlas.textureNamed("mage16"),
+        mageAnimationAtlas.textureNamed("mage17"),
+        mageAnimationAtlas.textureNamed("mage18"),
+        mageAnimationAtlas.textureNamed("mage19"),
+        mageAnimationAtlas.textureNamed("mage20"),
+        mageAnimationAtlas.textureNamed("mage21"),
+        mageAnimationAtlas.textureNamed("mage22"),
+        mageAnimationAtlas.textureNamed("mage23"),
+        mageAnimationAtlas.textureNamed("mage24"),
+        mageAnimationAtlas.textureNamed("mage25"),
+        mageAnimationAtlas.textureNamed("mage26"),
+        mageAnimationAtlas.textureNamed("mage27"),
+        mageAnimationAtlas.textureNamed("mage28"),
+        mageAnimationAtlas.textureNamed("mage29"),
+        mageAnimationAtlas.textureNamed("mage30"),
+        mageAnimationAtlas.textureNamed("mage31"),
+        mageAnimationAtlas.textureNamed("mage32"),
+        mageAnimationAtlas.textureNamed("mage33"),
+        mageAnimationAtlas.textureNamed("mage34"),
+        mageAnimationAtlas.textureNamed("mage35"),
+        mageAnimationAtlas.textureNamed("mage36"),
+        mageAnimationAtlas.textureNamed("mage37"),
+        mageAnimationAtlas.textureNamed("mage38"),
+        mageAnimationAtlas.textureNamed("mage39"),
+        mageAnimationAtlas.textureNamed("mage40")
+    ]
+}
+
+/*
+ PROXIMITY BAR ANIMATION
+ */
+
+// WHITE
+var PBWhiteAnimationAtlas: SKTextureAtlas {
+    return SKTextureAtlas(named: "proximityBarWhite")
+}
+
+var PBWhiteAnimationTextures: [SKTexture] {
+    return [
+        PBWhiteAnimationAtlas.textureNamed("proximityBarWhite1"),
+        PBWhiteAnimationAtlas.textureNamed("proximityBarWhite2")
+    ]
+}
+
+// YELLOW
+var PBYellowAnimationAtlas: SKTextureAtlas {
+    return SKTextureAtlas(named: "proximityBarYellow")
+}
+
+var PBYellowAnimationTextures: [SKTexture] {
+    return [
+        PBYellowAnimationAtlas.textureNamed("proximityBarYellow1"),
+        PBYellowAnimationAtlas.textureNamed("proximityBarYellow2")
+    ]
+}
+
+// RED
+var PBRedAnimationAtlas: SKTextureAtlas {
+    return SKTextureAtlas(named: "proximityBarRed")
+}
+
+var PBRedAnimationTextures: [SKTexture] {
+    return [
+        PBRedAnimationAtlas.textureNamed("proximityBarRed1"),
+        PBRedAnimationAtlas.textureNamed("proximityBarRed2")
+        
+    ]
+}
