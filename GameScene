@@ -1,0 +1,118 @@
+//
+//  GameScene.swift
+//  Open Space Game
+//
+//  Created by Marvin Günther on 17.02.23.
+//
+
+import SpriteKit
+
+class GameScene: SKScene {
+    
+    let title = SKSpriteNode(imageNamed: "title")
+    let music = SKAction.playSoundFileNamed("music", waitForCompletion: false)
+        
+    override func didMove(to view: SKView) {
+        
+        // running music
+        run(music)
+        
+        self.backgroundColor = backgroundColorCustom
+        
+        // animating stars
+        if let stars = SKEmitterNode(fileNamed: "Stars") {
+            stars.position = CGPoint(x: 0, y: 0)
+            stars.advanceSimulationTime(60)
+            stars.zPosition = 0
+            addChild(stars)
+        }
+        
+        // title
+        title.position.x = 0
+        title.position.y = 0
+        title.zPosition = 1
+        self.addChild(title)
+
+        introShip.position = CGPoint(x: -775, y: -170)
+        introShip.setScale(0.2)
+        introShip.zRotation = .pi * 1.5
+        introShip.zPosition = 3
+        addChild(introShip)
+        
+        introRocketFlame.position = CGPoint(x: -775, y: -170)
+        introRocketFlame.setScale(0.2)
+        introRocketFlame.zRotation = .pi * 1.5
+        introRocketFlame.zPosition = 2.9
+        addChild(introRocketFlame)
+        
+        introShip2.position = CGPoint(x: 775, y: 170)
+        introShip2.setScale(0.2)
+        introShip2.zRotation = .pi / 2
+        introShip2.zPosition = 3
+        addChild(introShip2)
+        
+        introRocketFlame2.position = CGPoint(x: 775, y: 170)
+        introRocketFlame2.setScale(0.2)
+        introRocketFlame2.zRotation = .pi / 2
+        introRocketFlame2.zPosition = 2.9
+        addChild(introRocketFlame2)
+        
+        moveIntroShip()
+        moveIntroTail()
+        moveIntroShip2()
+        moveIntroTail2()
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if let touch = touches.first {
+            let pos = touch.location(in: self)
+            let node = self.atPoint(pos)
+                
+            // moving into game when title is touched
+            if node == title {
+                introShip.removeFromParent()
+                introRocketFlame.removeFromParent()
+                let playState = PlayState(fileNamed: "PlayState")
+                playState?.scaleMode = .aspectFill
+                self.view?.presentScene(playState!, transition: SKTransition.fade(withDuration: 2))
+            }
+        }
+    }
+    
+    override func update(_ currentTime: TimeInterval) {
+        if introShip.position.x == 850 {
+            introShip.position.x = -775
+            introRocketFlame.position.x = -775
+            
+            introShip2.position.x = 775
+            introRocketFlame2.position.x = 775
+            
+            moveIntroShip()
+            moveIntroTail()
+            
+            moveIntroShip2()
+            moveIntroTail2()
+        }
+    }
+    
+    func moveIntroShip() {
+        let moveShip = SKAction.moveTo(x: 850, duration: 4.0)
+        introShip.run(moveShip)
+    }
+    
+    func moveIntroTail() {
+        let moveShip = SKAction.moveTo(x: 850, duration: 4.0)
+        introRocketFlame.run(moveShip)
+    }
+    
+    func moveIntroShip2() {
+        let moveShip = SKAction.moveTo(x: -850, duration: 4.0)
+        introShip2.run(moveShip)
+    }
+    
+    func moveIntroTail2() {
+        let moveShip = SKAction.moveTo(x: -850, duration: 4.0)
+        introRocketFlame2.run(moveShip)
+    }
+
+}
