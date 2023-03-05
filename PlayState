@@ -1,0 +1,1242 @@
+//
+//  PlayState.swift
+//  Open Space Game
+//
+//  Created by Marvin Günther on 27.02.23.
+//
+
+import CoreHaptics
+import SpriteKit
+
+class PlayState: SKScene, SKPhysicsContactDelegate {
+    
+    // --> DEBUG
+    //let SAPosition = SKLabelNode(fontNamed: "Chalkduster")
+    //let MAPosition = SKLabelNode(fontNamed: "Chalkduster")
+    //let BAPosition = SKLabelNode(fontNamed: "Chalkduster")
+    // DEBUG <--
+    
+    /*
+     INIT FUNCTION
+     */
+    
+    override func didMove(to view: SKView) {
+        
+        self.physicsWorld.contactDelegate = self
+        
+        // Check if the device supports haptics
+        let hapticCapability = CHHapticEngine.capabilitiesForHardware()
+        supportsHaptics = hapticCapability.supportsHaptics
+        
+        // setting background color
+        self.backgroundColor = backgroundColorCustom
+        
+        // init mage animation
+        startMageAnimation()
+        
+        // world edge INIT
+        worldEdge.position = CGPoint(x: 0, y: 0)
+        worldEdge.setScale(1.4)
+        worldEdge.zPosition = -1
+        addChild(worldEdge)
+        
+        // animating stars
+        if let stars = SKEmitterNode(fileNamed: "Stars") {
+            stars.position = CGPoint(x: 0, y: 0)
+            stars.advanceSimulationTime(60)
+            stars.zPosition = 0
+            addChild(stars)
+        }
+        
+        // islands INIT
+        platform1.position = CGPoint(x: 350, y: 900)
+        platform1.zPosition = 1
+        addChild(platform1)
+
+        platform2.position = CGPoint(x: -600, y: -200)
+        platform2.zPosition = 1
+        addChild(platform2)
+        
+        platform3.position = CGPoint(x: 2200, y: -100)
+        platform3.zPosition = 1
+        addChild(platform3)
+        
+        platform4.position = CGPoint(x: 1600, y: -1200)
+        platform4.zPosition = 1
+        addChild(platform4)
+        
+        platform5.position = CGPoint(x: 2000, y: 800)
+        platform5.zPosition = 1
+        addChild(platform5)
+        
+        platform6.position = CGPoint(x: -2000, y: 900)
+        platform6.zPosition = 1
+        addChild(platform6)
+        
+        platform7.position = CGPoint(x: 150, y: -1000)
+        platform7.zPosition = 1
+        addChild(platform7)
+        
+        platform8.position = CGPoint(x: -2200, y: -100)
+        platform8.zPosition = 1
+        addChild(platform8)
+        
+        platform9.position = CGPoint(x: 500, y: 100)
+        platform9.zPosition = 1
+        addChild(platform9)
+        
+        platform10.position = CGPoint(x: -1600, y: -1000)
+        platform10.zPosition = 1
+        addChild(platform10)
+        
+        platform11.position = CGPoint(x: -600, y: -1300)
+        platform11.zPosition = 1
+        addChild(platform11)
+        
+        platform12.position = CGPoint(x: 1600, y: 300)
+        platform12.zPosition = 1
+        addChild(platform12)
+        
+        platform13.position = CGPoint(x: -800, y: 1200)
+        platform13.zPosition = 1
+        addChild(platform13)
+        
+        // shrooms INIT
+        shroom1.position = CGPoint(x: 380, y: 1050)
+        shroom1.zPosition = 1.5
+        addChild(shroom1)
+
+        shroom2.position = CGPoint(x: -700, y: -100)
+        shroom2.zPosition = 1.5
+        addChild(shroom2)
+        
+        shroom3.position = CGPoint(x: -1250, y: -745)
+        shroom3.zPosition = 1.5
+        addChild(shroom3)
+        
+        shroom4.position = CGPoint(x: -2250, y: -30)
+        shroom4.zPosition = 1.5
+        addChild(shroom4)
+        
+        shroom5.position = CGPoint(x: 2100, y: 920)
+        shroom5.zPosition = 1.5
+        addChild(shroom5)
+        
+        // mage INIT
+        mage.position = CGPoint(x: -1850, y: -1000)
+        mage.setScale(1)
+        mage.zPosition = 2
+        addChild(mage)
+        
+        // asteroid big INIT
+        enemyAsteroidBig.position = CGPoint(x: 0, y: 0)
+        enemyAsteroidBig.setScale(0.1)
+        enemyAsteroidBig.zPosition = 2.3
+        enemyAsteroidBig.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 100, height: 100))
+        enemyAsteroidBig.physicsBody!.affectedByGravity = false
+        enemyAsteroidBig.physicsBody!.categoryBitMask = PhysicsCategories.BigAsteroid
+        // so asteroid collides with nothing
+        enemyAsteroidBig.physicsBody!.collisionBitMask = PhysicsCategories.None
+        // tell us when asteroid contatcs player or bullet
+        enemyAsteroidBig.physicsBody!.contactTestBitMask = PhysicsCategories.Player | PhysicsCategories.Bullet
+        addChild(enemyAsteroidBig)
+        
+        // asteroid medium INIT
+        enemyAsteroidMedium.position = CGPoint(x: 0, y: 0)
+        enemyAsteroidMedium.setScale(0.1)
+        enemyAsteroidMedium.zPosition = 2.3
+        enemyAsteroidMedium.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 100, height: 100))
+        enemyAsteroidMedium.physicsBody!.affectedByGravity = false
+        enemyAsteroidMedium.physicsBody!.categoryBitMask = PhysicsCategories.MediumAsteroid
+        enemyAsteroidMedium.physicsBody!.collisionBitMask = PhysicsCategories.None
+        enemyAsteroidMedium.physicsBody!.contactTestBitMask = PhysicsCategories.Player | PhysicsCategories.Bullet
+        addChild(enemyAsteroidMedium)
+        
+        // asteroid small INIT
+        enemyAsteroidSmall.position = CGPoint(x: 0, y: 0)
+        enemyAsteroidSmall.setScale(0.1)
+        enemyAsteroidSmall.zPosition = 2.3
+        enemyAsteroidSmall.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 40, height: 40))
+        enemyAsteroidSmall.physicsBody!.affectedByGravity = false
+        enemyAsteroidSmall.physicsBody!.categoryBitMask = PhysicsCategories.SmallAsteroid
+        enemyAsteroidSmall.physicsBody!.collisionBitMask = PhysicsCategories.None
+        enemyAsteroidBig.physicsBody!.contactTestBitMask = PhysicsCategories.Player | PhysicsCategories.Bullet
+        addChild(enemyAsteroidSmall)
+        
+        changeSmallAstPos()
+        changeMediumAstPos()
+        changeBigAstPos()
+        
+        // player INIT
+        player.position = CGPoint(x: 0, y: 0)
+        player.setScale(0.2)
+        player.zPosition = 3
+        player.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 40, height: 150))
+        player.physicsBody!.affectedByGravity = false
+        player.physicsBody!.categoryBitMask = PhysicsCategories.Player
+        player.physicsBody!.collisionBitMask = PhysicsCategories.None
+        player.physicsBody!.contactTestBitMask = PhysicsCategories.SmallAsteroid | PhysicsCategories.MediumAsteroid | PhysicsCategories.BigAsteroid
+        addChild(player)
+        
+        // rocket flame INIT
+        rocketFlame.position = CGPoint(x: 0, y: 0)
+        rocketFlame.setScale(0.2)
+        rocketFlame.zPosition = 2.9
+        rocketFlame.isHidden = true
+        addChild(rocketFlame)
+        
+        // fog INIT
+        fog1.position = CGPoint(x: -800, y: 600)
+        fog1.zPosition = 4
+        fog1.setScale(2.0)
+        addChild(fog1)
+        
+        fog1small.position = CGPoint(x: 2000, y: 1000)
+        fog1small.zPosition = 4
+        fog1small.setScale(0.7)
+        addChild(fog1small)
+        
+        fog2.position = CGPoint(x: 1000, y: -600)
+        fog2.zPosition = 4
+        fog2.setScale(2.0)
+        addChild(fog2)
+        
+        // tapButton INIT
+        tapButton.position = CGPoint(x: 100, y: 0)
+        tapButton.setScale(0.1)
+        tapButton.zPosition = 5
+        addChild(tapButton)
+        
+        // fireButton INIT
+        fireButton.position = CGPoint(x: 250, y: -200)
+        fireButton.setScale(0.25)
+        fireButton.zPosition = 6
+        fireButton.zRotation = 0
+        addChild(fireButton)
+        
+        // score label INIT
+        scoreLabel = SKLabelNode(fontNamed: "PingFangTC-Semibold")
+        scoreLabel.text = "0"
+        scoreLabel.fontSize = 35
+        scoreLabel.fontColor = SKColor.white
+        scoreLabel.position = CGPoint(x: -500, y: 260)
+        scoreLabel.zPosition = 10
+        addChild(scoreLabel)
+        
+        // pause and play button INIT
+        pauseButton.position = CGPoint(x: 500, y: 270)
+        pauseButton.setScale(0.3)
+        pauseButton.zPosition = 10
+        addChild(pauseButton)
+        
+        playButton.position = CGPoint(x: 490, y: 250)
+        playButton.setScale(0.6)
+        playButton.zPosition = 10
+        playButton.isHidden = true
+        addChild(playButton)
+        
+        // shield bar INIT
+        shieldBar0.position = CGPoint(x: -500, y: 240)
+        shieldBar0.setScale(0.15)
+        shieldBar0.zPosition = 10
+        addChild(shieldBar0)
+        
+        shieldBar1.position = CGPoint(x: -500, y: 240)
+        shieldBar1.setScale(0.15)
+        shieldBar1.zPosition = 10
+        shieldBar1.isHidden = true
+        addChild(shieldBar1)
+        
+        shieldBar2.position = CGPoint(x: -500, y: 240)
+        shieldBar2.setScale(0.15)
+        shieldBar2.zPosition = 10
+        shieldBar2.isHidden = true
+        addChild(shieldBar2)
+        
+        shieldBar3.position = CGPoint(x: -500, y: 240)
+        shieldBar3.setScale(0.15)
+        shieldBar3.zPosition = 10
+        shieldBar3.isHidden = true
+        addChild(shieldBar3)
+        
+        shieldBar4.position = CGPoint(x: -500, y: 240)
+        shieldBar4.setScale(0.15)
+        shieldBar4.zPosition = 10
+        shieldBar4.isHidden = true
+        addChild(shieldBar4)
+        
+        shieldBar5.position = CGPoint(x: -500, y: 240)
+        shieldBar5.setScale(0.15)
+        shieldBar5.zPosition = 10
+        shieldBar5.isHidden = true
+        addChild(shieldBar5)
+        
+        // PBWhite INIT
+        PBWhite.position = CGPoint(x: 0, y: 270)
+        PBWhite.setScale(0.3)
+        PBWhite.zPosition = 10
+        addChild(PBWhite)
+        
+        // PBYellow INIT
+        PBYellow.position = CGPoint(x: 0, y: 270)
+        PBYellow.setScale(0.3)
+        PBYellow.zPosition = 11
+        addChild(PBYellow)
+        
+        // PBRed INIT
+        PBRed.position = CGPoint(x: 0, y: 270)
+        PBRed.setScale(0.3)
+        PBRed.zPosition = 12
+        addChild(PBRed)
+        
+        startPBWhite()
+        startPBYellow()
+        startPBRed()
+        
+        // --> DEBUG
+        //SAPosition.text = "SA = \(enemyAsteroidSmall.position)"
+        //SAPosition.fontSize = 30
+        //SAPosition.fontColor = SKColor.green
+        //SAPosition.zPosition = 20
+        //SAPosition.position = CGPoint(x: -350, y: -150)
+        //addChild(SAPosition)
+
+        //MAPosition.text = "MA = \(enemyAsteroidMedium.position)"
+        //MAPosition.fontSize = 30
+        //MAPosition.fontColor = SKColor.green
+        //MAPosition.zPosition = 20
+        //MAPosition.position = CGPoint(x: -350, y: -200)
+        //addChild(MAPosition)
+        
+        //BAPosition.text = "BA = \(enemyAsteroidBig.position)"
+        //BAPosition.fontSize = 30
+        //BAPosition.fontColor = SKColor.green
+        //BAPosition.zPosition = 20
+        //BAPosition.position = CGPoint(x: -350, y: -250)
+        //addChild(BAPosition)
+        // DEBUG <--
+    }
+    
+    
+    /*
+     TOUCH FUNCTIONS
+     */
+    
+    func touchDown(atPoint pos : CGPoint) {
+        let node = self.atPoint(pos)
+                    
+        // pausing and unpausing
+        if node == pauseButton {
+            pauseButton.isHidden = true
+            playButton.isHidden = false
+            
+            self.view?.isPaused = true
+            gamePaused = true
+        }
+        else if node == playButton {
+            pauseButton.isHidden = false
+            playButton.isHidden = true
+            
+            self.view?.isPaused = false
+            gamePaused = false
+        } else {
+            // moving ship
+            if !(pos.x > 200 && pos.x < 300 && pos.y > -250 && pos.y < -150) {
+                tapButton.position = CGPoint(x: pos.x, y: pos.y)
+                startTapAnimation()
+                
+                isTouched = true
+                touchPosX = pos.x
+                touchPosY = pos.y
+            }
+            else {
+                // firing bullet and spark effect
+                fireBullet()
+                createBulletSparks()
+                    
+                if supportsHaptics && !gamePaused {
+                    hapticShot()
+                }
+            }
+        }
+        
+    }
+    
+    func touchMoved(toPoint pos : CGPoint) {
+        touchPosX = pos.x
+        touchPosY = pos.y
+        
+        tapButton.position = CGPoint(x: pos.x, y: pos.y)
+        startTapAnimation()
+    }
+    
+    func touchUp(atPoint pos : CGPoint) {
+        isTouched = false
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for t in touches {
+            self.touchDown(atPoint: t.location(in: self))
+        }
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for t in touches {
+            self.touchMoved(toPoint: t.location(in: self))
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        for t in touches {
+            self.touchUp(atPoint: t.location(in: self))
+        }
+    }
+    
+    
+    /*
+     PHYSICS CONTACT FUNCTION
+     */
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        var body1 = SKPhysicsBody()
+        var body2 = SKPhysicsBody()
+        
+        if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
+            body1 = contact.bodyA
+            body2 = contact.bodyB
+        }
+        else {
+            body1 = contact.bodyB
+            body2 = contact.bodyA
+        }
+        
+        // player collides with enemy asteroid
+        if (body1.categoryBitMask == PhysicsCategories.Player && body2.categoryBitMask == PhysicsCategories.SmallAsteroid) || (body1.categoryBitMask == PhysicsCategories.Player && body2.categoryBitMask == PhysicsCategories.MediumAsteroid) || (body1.categoryBitMask == PhysicsCategories.Player && body2.categoryBitMask == PhysicsCategories.BigAsteroid) {
+            if shieldLevel == 0 {
+                let endState = EndState(fileNamed: "EndState")
+                endState?.scaleMode = .aspectFill
+                self.view?.presentScene(endState!)
+            }
+            else {
+                shieldLevel -= 1
+                shieldHit = true
+                run(shieldDownSFX)
+            }
+            
+            if body2.categoryBitMask == PhysicsCategories.BigAsteroid {
+                bigAsteroidHit = true
+            }
+            if body2.categoryBitMask == PhysicsCategories.MediumAsteroid {
+                mediumAsteroidHit = true
+            }
+            if body2.categoryBitMask == PhysicsCategories.SmallAsteroid {
+                smallAsteroidHit = true
+            }
+        }
+        
+        // laser bullet collides with enemy asteroid
+        if body1.categoryBitMask == PhysicsCategories.Bullet && body2.categoryBitMask == PhysicsCategories.SmallAsteroid {
+            body1.node?.removeFromParent()
+            smallAsteroidHit = true
+            homingSpeedSmall += 1
+            score += smallScore
+            smallScore += 2 * smallScore
+        }
+        else if body1.categoryBitMask == PhysicsCategories.Bullet && body2.categoryBitMask == PhysicsCategories.MediumAsteroid {
+            body1.node?.removeFromParent()
+            mediumAsteroidHit = true
+            homingSpeedMedium += 1
+            score += mediumScore
+            mediumScore += 2 * mediumScore
+        }
+        else if body1.categoryBitMask == PhysicsCategories.Bullet && body2.categoryBitMask == PhysicsCategories.BigAsteroid {
+            body1.node?.removeFromParent()
+            bigAsteroidHit = true
+            homingSpeedBig += 1
+            score += bigScore
+            bigScore += 2 * bigScore
+        }
+    }
+    
+    
+    /*
+     UPDATE FUNCTION
+     */
+    
+    override func update(_ currentTime: TimeInterval) {
+        // --> DEBUG
+        //SAPosition.text = "SA = \(enemyAsteroidSmall.position)"
+        //MAPosition.text = "MA = \(enemyAsteroidMedium.position)"
+        //BAPosition.text = "BA = \(enemyAsteroidBig.position)"
+        // DEBUG <--
+        
+        if isTouched {
+            moveShip()
+        }
+        
+        // showing rocket flame when ship is moving
+        if dtX < -1.0 || dtX > 1.0 || dtY < -1.0 || dtY > 1.0 || player.position.x == 380 || player.position.x == -380 || player.position.y == 185 || player.position.y == -185 {
+            rocketFlame.isHidden = false
+        }
+        else {
+            rocketFlame.isHidden = true
+        }
+        
+        // updating player position
+        player.position.x += 1 * dtX
+        player.position.y += 1 * dtY
+        
+        rocketFlame.position.x += 1 * dtX
+        rocketFlame.position.y += 1 * dtY
+        
+        // rotating fire button and asteroids
+        fireButton.zRotation -= 0.01
+        enemyAsteroidBig.zRotation += 0.002
+        enemyAsteroidMedium.zRotation -= 0.005
+        enemyAsteroidSmall.zRotation += 0.009
+        
+        // moving asteroids after being fired upon
+        if smallAsteroidHit {
+            smallAsteroidHit = false
+            changeSmallAstPos()
+        }
+        if mediumAsteroidHit {
+            mediumAsteroidHit = false
+            changeMediumAstPos()
+        }
+        if bigAsteroidHit {
+            bigAsteroidHit = false
+            changeBigAstPos()
+        }
+        
+        // shield hit feedback
+        if shieldHit {
+            shieldHit = false
+            hapticWarning()
+        }
+        
+        // shield level
+        if shieldLevel == 1 {
+            shieldBar1.isHidden = false
+            shieldBar2.isHidden = true
+            shieldBar3.isHidden = true
+            shieldBar4.isHidden = true
+            shieldBar5.isHidden = true
+        }
+        else if shieldLevel == 2 {
+            shieldBar1.isHidden = true
+            shieldBar2.isHidden = false
+            shieldBar3.isHidden = true
+            shieldBar4.isHidden = true
+            shieldBar5.isHidden = true
+        }
+        else if shieldLevel == 3 {
+            shieldBar1.isHidden = true
+            shieldBar2.isHidden = true
+            shieldBar3.isHidden = false
+            shieldBar4.isHidden = true
+            shieldBar5.isHidden = true
+        }
+        else if shieldLevel == 4 {
+            shieldBar1.isHidden = true
+            shieldBar2.isHidden = true
+            shieldBar3.isHidden = true
+            shieldBar4.isHidden = false
+            shieldBar5.isHidden = true
+        }
+        else if shieldLevel == 5 {
+            shieldBar1.isHidden = true
+            shieldBar2.isHidden = true
+            shieldBar3.isHidden = true
+            shieldBar4.isHidden = true
+            shieldBar5.isHidden = false
+        }
+        else {
+            shieldBar1.isHidden = true
+            shieldBar2.isHidden = true
+            shieldBar3.isHidden = true
+            shieldBar4.isHidden = true
+            shieldBar5.isHidden = true
+        }
+        
+        // proximity bar logic
+        if (abs(player.position.x - enemyAsteroidSmall.position.x) < 600 && abs(player.position.y - enemyAsteroidSmall.position.y) < 600) || (abs(player.position.x - enemyAsteroidMedium.position.x) < 600 && abs(player.position.y - enemyAsteroidMedium.position.y) < 600) || (abs(player.position.x - enemyAsteroidBig.position.x) < 600 && abs(player.position.y - enemyAsteroidBig.position.y) < 600) {
+            PBRed.isHidden = false
+            PBYellow.isHidden = true
+            PBWhite.isHidden = true
+            
+            if supportsHaptics && !hapticWarningShot {
+                hapticWarningShot = true
+                hapticWarning()
+            }
+            
+            asteroidHoming = true
+        }
+        else if (abs(player.position.x - enemyAsteroidSmall.position.x) < 1100 && abs(player.position.y - enemyAsteroidSmall.position.y) < 1100) || (abs(player.position.x - enemyAsteroidMedium.position.x) < 1100 && abs(player.position.y - enemyAsteroidMedium.position.y) < 1100) || (abs(player.position.x - enemyAsteroidBig.position.x) < 1100 && abs(player.position.y - enemyAsteroidBig.position.y) < 1100) {
+            PBRed.isHidden = true
+            PBYellow.isHidden = false
+            PBWhite.isHidden = true
+            
+            hapticWarningShot = false
+            
+            asteroidHoming = true
+        } else {
+            PBRed.isHidden = true
+            PBYellow.isHidden = true
+            PBWhite.isHidden = false
+            
+            asteroidHoming = false
+            
+            smallAstClose = false
+            mediumAstClose = false
+            bigAstClose = false
+        }
+        
+        // asteroid homing in on player
+        if asteroidHoming {
+            if abs(player.position.x - enemyAsteroidSmall.position.x) < 1100 && abs(player.position.y - enemyAsteroidSmall.position.y) < 1100 {
+                if enemyAsteroidSmall.position.x < player.position.x - 30 {
+                    enemyAsteroidSmall.position.x += homingSpeedSmall
+                }
+                else if enemyAsteroidSmall.position.x > player.position.x + 30 {
+                    enemyAsteroidSmall.position.x -= homingSpeedSmall
+                }
+                else {
+                    // removes stuttering
+                }
+                
+                if enemyAsteroidSmall.position.y < player.position.y - 30 {
+                    enemyAsteroidSmall.position.y += homingSpeedSmall / 1.3
+                }
+                else if enemyAsteroidSmall.position.y > player.position.y + 30 {
+                    enemyAsteroidSmall.position.y -= homingSpeedSmall / 1.3
+                }
+                else {
+                    
+                }
+                
+                if !smallAstClose {
+                    run(smallAstSFX)
+                    smallAstClose = true
+                }
+            }
+            else {
+                smallAstClose = false
+            }
+            
+            if abs(player.position.x - enemyAsteroidMedium.position.x) < 1100 && abs(player.position.y - enemyAsteroidMedium.position.y) < 1100 {
+                if enemyAsteroidMedium.position.x < player.position.x - 30 {
+                    enemyAsteroidMedium.position.x += homingSpeedMedium
+                }
+                else if enemyAsteroidMedium.position.x > player.position.x + 30 {
+                    enemyAsteroidMedium.position.x -= homingSpeedMedium
+                }
+                else {
+  
+                }
+                
+                if enemyAsteroidMedium.position.y < player.position.y - 30 {
+                    enemyAsteroidMedium.position.y += homingSpeedMedium / 2
+                }
+                else if enemyAsteroidMedium.position.y > player.position.y + 30 {
+                    enemyAsteroidMedium.position.y -= homingSpeedMedium / 2
+                }
+                else {
+                    
+                }
+                
+                if !mediumAstClose {
+                    run(mediumAstSFX)
+                    mediumAstClose = true
+                }
+            }
+            else {
+                mediumAstClose = false
+            }
+            
+            if abs(player.position.x - enemyAsteroidBig.position.x) < 1100 && abs(player.position.y - enemyAsteroidBig.position.y) < 1100 {
+                if enemyAsteroidBig.position.x < player.position.x - 30 {
+                    enemyAsteroidBig.position.x += homingSpeedBig
+                }
+                else if enemyAsteroidBig.position.x > player.position.x + 30 {
+                    enemyAsteroidBig.position.x -= homingSpeedBig
+                }
+                else {
+ 
+                }
+                
+                if enemyAsteroidBig.position.y < player.position.y - 30 {
+                    enemyAsteroidBig.position.y += homingSpeedBig / 3
+                }
+                else if enemyAsteroidBig.position.y > player.position.y + 30 {
+                    enemyAsteroidBig.position.y -= homingSpeedBig / 3
+                }
+                else {
+                    
+                }
+                
+                if !bigAstClose {
+                    run(bigAstSFX)
+                    bigAstClose = true
+                }
+            }
+            else {
+                bigAstClose = false
+            }
+        }
+        
+        // collecting mushrooms
+        if (abs(player.position.x - shroom1.position.x) < 50 && abs(player.position.y - shroom1.position.y) < 50) && shroom1.isHidden == false {
+            if shieldLevel < 5 {
+                shieldLevel += 1
+                shroom1.isHidden = true
+                run(shieldUpSFX)
+            }
+        }
+        if (abs(player.position.x - shroom2.position.x) < 50 && abs(player.position.y - shroom2.position.y) < 50) && shroom2.isHidden == false {
+            if shieldLevel < 5 {
+                shieldLevel += 1
+                shroom2.isHidden = true
+                run(shieldUpSFX)
+            }
+        }
+        if (abs(player.position.x - shroom3.position.x) < 50 && abs(player.position.y - shroom3.position.y) < 50) && shroom3.isHidden == false {
+            if shieldLevel < 5 {
+                shieldLevel += 1
+                shroom3.isHidden = true
+                run(shieldUpSFX)
+            }
+        }
+        if (abs(player.position.x - shroom4.position.x) < 50 && abs(player.position.y - shroom4.position.y) < 50) && shroom4.isHidden == false {
+            if shieldLevel < 5 {
+                shieldLevel += 1
+                shroom4.isHidden = true
+                run(shieldUpSFX)
+            }
+        }
+        if (abs(player.position.x - shroom5.position.x) < 50 && abs(player.position.y - shroom5.position.y) < 50) && shroom5.isHidden == false {
+            if shieldLevel < 5 {
+                shieldLevel += 1
+                shroom5.isHidden = true
+                run(shieldUpSFX)
+            }
+        }
+        
+        // rotating ship
+        if (dtX < 0 && dtY < 0) || (dtX < 0 && dtY > 0) {
+            player.zRotation = .pi / 2
+            rocketFlame.zRotation = .pi / 2
+            rotateLeft = true
+            rotateRight = false
+            rotateDown = false
+        }
+        else if (dtX > 0 && dtY < 0) || (dtX > 0 && dtY > 0) {
+            player.zRotation = .pi * 1.5
+            rocketFlame.zRotation = .pi * 1.5
+            rotateLeft = false
+            rotateRight = true
+            rotateDown = false
+        }
+        else if dtX < 0 && dtY == 0 {
+            player.zRotation = .pi / 2
+            rocketFlame.zRotation = .pi / 2
+            rotateLeft = true
+            rotateRight = false
+            rotateDown = false
+        }
+        else if dtX > 0 && dtY == 0 {
+            player.zRotation = .pi * 1.5
+            rocketFlame.zRotation = .pi * 1.5
+            rotateLeft = false
+            rotateRight = true
+            rotateDown = false
+        }
+        else if dtX == 0 && dtY < 0 {
+            player.zRotation = .pi
+            rocketFlame.zRotation = .pi
+            rotateLeft = false
+            rotateRight = false
+            rotateDown = true
+        }
+        else {
+            player.zRotation = 0
+            rocketFlame.zRotation = 0
+            rotateLeft = false
+            rotateRight = false
+            rotateDown = false
+        }
+
+        // KEEPING PLAYER IN BOUNDS
+        // updating world position x axis
+        if worldEdge.position.x >= -worldOffsetX && worldEdge.position.x <= worldOffsetX {
+            if player.position.x > 380 {
+                player.position.x = 380
+                rocketFlame.position.x = 380
+                
+                xMin += Int(-maxDT)
+                xMax += Int(-maxDT)
+                
+                enemyAsteroidBig.position.x += -maxDT
+                enemyAsteroidMedium.position.x += -maxDT
+                enemyAsteroidSmall.position.x += -maxDT
+                
+                worldEdge.position.x += -maxDT
+                
+                fog1.position.x += -maxDT
+                fog1small.position.x += -maxDT
+                fog2.position.x += -maxDT
+                
+                platform1.position.x += -maxDT
+                platform2.position.x += -maxDT
+                platform3.position.x += -maxDT
+                platform4.position.x += -maxDT
+                platform5.position.x += -maxDT
+                platform6.position.x += -maxDT
+                platform7.position.x += -maxDT
+                platform8.position.x += -maxDT
+                platform9.position.x += -maxDT
+                platform10.position.x += -maxDT
+                platform11.position.x += -maxDT
+                platform12.position.x += -maxDT
+                platform13.position.x += -maxDT
+                
+                shroom1.position.x += -maxDT
+                shroom2.position.x += -maxDT
+                shroom3.position.x += -maxDT
+                shroom4.position.x += -maxDT
+                shroom5.position.x += -maxDT
+                
+                mage.position.x += -maxDT
+            }
+            else if player.position.x < -380 {
+                player.position.x = -380
+                rocketFlame.position.x = -380
+                
+                xMin += Int(maxDT)
+                xMax += Int(maxDT)
+                
+                enemyAsteroidBig.position.x += maxDT
+                enemyAsteroidMedium.position.x += maxDT
+                enemyAsteroidSmall.position.x += maxDT
+                
+                worldEdge.position.x += maxDT
+                
+                fog1.position.x += maxDT
+                fog1small.position.x += maxDT
+                fog2.position.x += maxDT
+                
+                platform1.position.x += maxDT
+                platform2.position.x += maxDT
+                platform3.position.x += maxDT
+                platform4.position.x += maxDT
+                platform5.position.x += maxDT
+                platform6.position.x += maxDT
+                platform7.position.x += maxDT
+                platform8.position.x += maxDT
+                platform9.position.x += maxDT
+                platform10.position.x += maxDT
+                platform11.position.x += maxDT
+                platform12.position.x += maxDT
+                platform13.position.x += maxDT
+                
+                shroom1.position.x += maxDT
+                shroom2.position.x += maxDT
+                shroom3.position.x += maxDT
+                shroom4.position.x += maxDT
+                shroom5.position.x += maxDT
+                
+                mage.position.x += maxDT
+            }
+        }
+        else {
+            worldEdge.position = CGPoint(x: 0, y: 0)
+            
+            player.position = CGPoint(x: 0, y: 0)
+            rocketFlame.position = CGPoint(x: 0, y: 0)
+            
+            xMin = -3000
+            xMax = 3000
+            yMin = -2000
+            yMax = 2000
+            
+            changeSmallAstPos()
+            changeMediumAstPos()
+            changeBigAstPos()
+            
+            mage.position = CGPoint(x: -1850, y: -1000)
+
+            fog1.position = CGPoint(x: -800, y: 600)
+            fog1small.position = CGPoint(x: 2000, y: 1000)
+            fog2.position = CGPoint(x: 1000, y: -600)
+            
+            platform1.position = CGPoint(x: 350, y: 900)
+            platform2.position = CGPoint(x: -600, y: -200)
+            platform3.position = CGPoint(x: 2200, y: -100)
+            platform4.position = CGPoint(x: 1600, y: -1200)
+            platform5.position = CGPoint(x: 2000, y: 800)
+            platform6.position = CGPoint(x: -2000, y: 900)
+            platform7.position = CGPoint(x: 150, y: -1000)
+            platform8.position = CGPoint(x: -2200, y: -100)
+            platform9.position = CGPoint(x: 500, y: 100)
+            platform10.position = CGPoint(x: -1600, y: -1000)
+            platform11.position = CGPoint(x: -600, y: -1300)
+            platform12.position = CGPoint(x: 1600, y: 300)
+            platform13.position = CGPoint(x: -800, y: 1200)
+            
+            shroom1.position = CGPoint(x: 380, y: 1050)
+            shroom2.position = CGPoint(x: -700, y: -100)
+            shroom3.position = CGPoint(x: -1250, y: -745)
+            shroom4.position = CGPoint(x: -2250, y: -30)
+            shroom5.position = CGPoint(x: 2100, y: 920)
+        }
+
+        // updating world position y axis
+        if worldEdge.position.y >= -worldOffsetY && worldEdge.position.y <= worldOffsetY {
+            if player.position.y > 185 {
+                player.position.y = 185
+                rocketFlame.position.y = 185
+                
+                yMin += Int(-maxDT)
+                yMax += Int(-maxDT)
+                
+                enemyAsteroidBig.position.y += -maxDT
+                enemyAsteroidMedium.position.y += -maxDT
+                enemyAsteroidSmall.position.y += -maxDT
+                
+                worldEdge.position.y += -maxDT
+                
+                fog1.position.y += -maxDT
+                fog1small.position.y += -maxDT
+                fog2.position.y += -maxDT
+                
+                platform1.position.y += -maxDT
+                platform2.position.y += -maxDT
+                platform3.position.y += -maxDT
+                platform4.position.y += -maxDT
+                platform5.position.y += -maxDT
+                platform6.position.y += -maxDT
+                platform7.position.y += -maxDT
+                platform8.position.y += -maxDT
+                platform9.position.y += -maxDT
+                platform10.position.y += -maxDT
+                platform11.position.y += -maxDT
+                platform12.position.y += -maxDT
+                platform13.position.y += -maxDT
+                
+                shroom1.position.y += -maxDT
+                shroom2.position.y += -maxDT
+                shroom3.position.y += -maxDT
+                shroom4.position.y += -maxDT
+                shroom5.position.y += -maxDT
+                
+                mage.position.y += -maxDT
+            }
+            else if player.position.y < -185 {
+                player.position.y = -185
+                rocketFlame.position.y = -185
+                
+                yMin += Int(maxDT)
+                yMax += Int(maxDT)
+                
+                enemyAsteroidBig.position.y += maxDT
+                enemyAsteroidMedium.position.y += maxDT
+                enemyAsteroidSmall.position.y += maxDT
+                
+                worldEdge.position.y += maxDT
+                
+                fog1.position.y += maxDT
+                fog1small.position.y += maxDT
+                fog2.position.y += maxDT
+                
+                platform1.position.y += maxDT
+                platform2.position.y += maxDT
+                platform3.position.y += maxDT
+                platform4.position.y += maxDT
+                platform5.position.y += maxDT
+                platform6.position.y += maxDT
+                platform7.position.y += maxDT
+                platform8.position.y += maxDT
+                platform9.position.y += maxDT
+                platform10.position.y += maxDT
+                platform11.position.y += maxDT
+                platform12.position.y += maxDT
+                platform13.position.y += maxDT
+                
+                shroom1.position.y += maxDT
+                shroom2.position.y += maxDT
+                shroom3.position.y += maxDT
+                shroom4.position.y += maxDT
+                shroom5.position.y += maxDT
+            
+                mage.position.y += maxDT
+            }
+        }
+        else {
+            worldEdge.position = CGPoint(x: 0, y: 0)
+            
+            player.position = CGPoint(x: 0, y: 0)
+            rocketFlame.position = CGPoint(x: 0, y: 0)
+            
+            xMin = -3000
+            xMax = 3000
+            yMin = -2000
+            yMax = 2000
+            
+            changeSmallAstPos()
+            changeMediumAstPos()
+            changeBigAstPos()
+            
+            mage.position = CGPoint(x: -1850, y: -1000)
+
+            fog1.position = CGPoint(x: -800, y: 600)
+            fog1small.position = CGPoint(x: 2000, y: 1000)
+            fog2.position = CGPoint(x: 1000, y: -600)
+            
+            platform1.position = CGPoint(x: 350, y: 900)
+            platform2.position = CGPoint(x: -600, y: -200)
+            platform3.position = CGPoint(x: 2200, y: -100)
+            platform4.position = CGPoint(x: 1600, y: -1200)
+            platform5.position = CGPoint(x: 2000, y: 800)
+            platform6.position = CGPoint(x: -2000, y: 900)
+            platform7.position = CGPoint(x: 150, y: -1000)
+            platform8.position = CGPoint(x: -2200, y: -100)
+            platform9.position = CGPoint(x: 500, y: 100)
+            platform10.position = CGPoint(x: -1600, y: -1000)
+            platform11.position = CGPoint(x: -600, y: -1300)
+            platform12.position = CGPoint(x: 1600, y: 300)
+            platform13.position = CGPoint(x: -800, y: 1200)
+            
+            shroom1.position = CGPoint(x: 380, y: 1050)
+            shroom2.position = CGPoint(x: -700, y: -100)
+            shroom3.position = CGPoint(x: -1250, y: -745)
+            shroom4.position = CGPoint(x: -2250, y: -30)
+            shroom5.position = CGPoint(x: 2100, y: 920)
+        }
+    }
+    
+    
+    /*
+     CUSTOM FUNCTIONS
+     */
+    
+    // tap animation
+    func startTapAnimation() {
+        let tapAnimation = SKAction.animate(with: tapAnimationTextures, timePerFrame: 0.033)
+        tapButton.run(tapAnimation)
+    }
+    
+    // mage animation
+    func startMageAnimation() {
+        let mageAnimation = SKAction.animate(with: mageAnimationTextures, timePerFrame: 0.033)
+        mage.run(SKAction.repeatForever(mageAnimation))
+    }
+    
+    // proximity bar white
+    func startPBWhite() {
+        let PBWhiteAnimation = SKAction.animate(with: PBWhiteAnimationTextures, timePerFrame: 2)
+        PBWhite.run(SKAction.repeatForever(PBWhiteAnimation))
+    }
+    
+    // proximity bar yellow
+    func startPBYellow() {
+        let PBYellowAnimation = SKAction.animate(with: PBYellowAnimationTextures, timePerFrame: 0.5)
+        PBYellow.run(SKAction.repeatForever(PBYellowAnimation))
+    }
+    
+    // proximity bar red
+    func startPBRed() {
+        let PBRedAnimation = SKAction.animate(with: PBRedAnimationTextures, timePerFrame: 0.2)
+        PBRed.run(SKAction.repeatForever(PBRedAnimation))
+    }
+    
+    // changing asteroid position after being fired upon
+    func changeSmallAstPos() {
+        var randomX = Int.random(in: xMin...xMax)
+        var randomY = Int.random(in: yMin...yMax)
+        
+        // keeping asteroids from spawning on top of player
+        if abs(Int(player.position.x) - randomX) < 600 && abs(Int(player.position.y) - randomY) < 600 {
+            randomX = Int(platform3.position.x) + 100
+            randomY = Int(platform3.position.y) + 100
+        }
+        
+        enemyAsteroidSmall.position = CGPoint(x: randomX, y: randomY)
+    }
+    
+    func changeMediumAstPos() {
+        var randomX = Int.random(in: xMin...xMax)
+        var randomY = Int.random(in: yMin...yMax)
+        
+        if abs(Int(player.position.x) - randomX) < 600 && abs(Int(player.position.y) - randomY) < 600 {
+            randomX = Int(platform4.position.x) + 100
+            randomY = Int(platform4.position.y) + 100
+        }
+
+        enemyAsteroidMedium.position = CGPoint(x: randomX, y: randomY)
+    }
+    
+    func changeBigAstPos() {
+        var randomX = Int.random(in: xMin...xMax)
+        var randomY = Int.random(in: yMin...yMax)
+        
+        if abs(Int(player.position.x) - randomX) < 600 && abs(Int(player.position.y) - randomY) < 600 {
+            randomX = Int(platform5.position.x) + 100
+            randomY = Int(platform5.position.y) + 100
+        }
+        
+        enemyAsteroidBig.position = CGPoint(x: randomX, y: randomY)
+    }
+    
+    // fire bullet
+    func fireBullet() {
+        let laserBullet = SKSpriteNode(imageNamed: "laserBullet")
+        laserBullet.setScale(0.08)
+        laserBullet.position.x = player.position.x - 2
+        laserBullet.position.y = player.position.y + 100
+        laserBullet.zRotation = 0
+        laserBullet.zPosition = 2.5
+        laserBullet.physicsBody = SKPhysicsBody(rectangleOf: laserBullet.size)
+        laserBullet.physicsBody!.affectedByGravity = false
+        laserBullet.physicsBody!.categoryBitMask = PhysicsCategories.Bullet
+        laserBullet.physicsBody!.collisionBitMask = PhysicsCategories.None
+        laserBullet.physicsBody!.contactTestBitMask = PhysicsCategories.SmallAsteroid | PhysicsCategories.MediumAsteroid | PhysicsCategories.BigAsteroid
+        addChild(laserBullet)
+        
+        if rotateLeft {
+            // shooting laser left
+            laserBullet.zRotation = .pi / 2
+            laserBullet.position.x -= 50
+            laserBullet.position.y -= 102
+            
+            let moveLaserBullet = SKAction.moveTo(x: -800, duration: 0.6)
+            let deleteLaserBullet = SKAction.removeFromParent()
+            let laserSequence = SKAction.sequence([moveLaserBullet, deleteLaserBullet])
+            
+            laserBullet.run(laserSequence)
+            run(shotSFX)
+        }
+        else if rotateRight {
+            // shooting laser right
+            laserBullet.zRotation = .pi * 1.5
+            laserBullet.position.x += 50
+            laserBullet.position.y -= 98
+            
+            let moveLaserBullet = SKAction.moveTo(x: 800, duration: 0.6)
+            let deleteLaserBullet = SKAction.removeFromParent()
+            let laserSequence = SKAction.sequence([moveLaserBullet, deleteLaserBullet])
+            
+            laserBullet.run(laserSequence)
+            run(shotSFX)
+        }
+        else if rotateDown {
+            // shooting laser down
+            laserBullet.zRotation = .pi
+            laserBullet.position.x += 4
+            laserBullet.position.y -= 110
+            
+            let moveLaserBullet = SKAction.moveTo(y: -350, duration: 0.3)
+            let deleteLaserBullet = SKAction.removeFromParent()
+            let laserSequence = SKAction.sequence([moveLaserBullet, deleteLaserBullet])
+            
+            laserBullet.run(laserSequence)
+            run(shotSFX)
+        }
+        else {
+            // shooting laser straight up
+            let moveLaserBullet = SKAction.moveTo(y: 350, duration: 0.3)
+            let deleteLaserBullet = SKAction.removeFromParent()
+            let laserSequence = SKAction.sequence([moveLaserBullet, deleteLaserBullet])
+            
+            laserBullet.run(laserSequence)
+            run(shotSFX)
+        }
+    }
+    
+    // bullet sparks
+    func createBulletSparks() {
+        if let sparks = SKEmitterNode(fileNamed: "BulletSparks") {
+            sparks.setScale(1)
+            sparks.position = CGPoint(x: 250, y: -200)
+            sparks.zPosition = 5.5
+            addChild(sparks)
+            
+            let waitSparks = SKAction.moveTo(y: -200, duration: 2)
+            let deleteSparks = SKAction.removeFromParent()
+            let sparkSequence = SKAction.sequence([waitSparks, deleteSparks])
+            sparks.run(sparkSequence)
+        }
+    }
+    
+    // haptic feedback when shooting
+    func hapticShot() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.error)
+    }
+    
+    func hapticWarning() {
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.warning)
+    }
+    
+    // moving ship
+    func moveShip() {
+        // user touching phone left or right of ship
+        if !(player.position.x < touchPosX + 25 && player.position.x > touchPosX - 25) {
+            if player.position.x < touchPosX {
+                if player.position.x <= -380 {
+                    dtX = maxDT
+                }
+                else if dtX < maxDT {
+                    dtX += 0.2
+                }
+                else {
+                    dtX = maxDT
+                }
+            }
+            else {
+                if player.position.x >= 380 {
+                    dtX = -maxDT
+                }
+                else if dtX > -maxDT {
+                    dtX -= 0.2
+                }
+                else {
+                    dtX = -maxDT
+                }
+            }
+        }
+        else {
+            dtX = 0.0
+        }
+            
+        // user touching above or below ship
+        if !(player.position.y < touchPosY + 25 && player.position.y > touchPosY - 25) {
+            if player.position.y < touchPosY {
+                if player.position.y <= -185 {
+                    dtY = 3.0
+                }
+                else if dtY < maxDT {
+                    dtY += 0.2
+                }
+                else {
+                    dtY = maxDT
+                }
+            }
+            else {
+                if player.position.y >= 185 {
+                    dtY = -3.0
+                }
+                else if dtY > -maxDT {
+                    dtY -= 0.2
+                }
+                else {
+                    dtY = -maxDT
+                }
+            }
+        }
+        else {
+            dtY = 0.0
+        }
+    }
+
+}
